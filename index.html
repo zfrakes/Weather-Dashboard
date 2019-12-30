@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.min.js"
+      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <header>
+      Weather Dashboard
+    </header>
+    <h4>Search for a City:</h4>
+    <div class="Search">
+      <input
+        type="text"
+        id="name"
+        class="form-control"
+        aria-label="cities"
+        aria-describedby="basic-addon2"
+      />
+      <div class="input-group-append">
+        <button id="search" class="btn btn-outline-secondary" type="button">
+          Search
+        </button>
+      </div>
+    </div>
+  </body>
+  <!-- <script type="text/javascript" src="./script.js" /> -->
+  <script>
+    const api_key = "&appid=10e84e4fb9948d4e60c90a2a674337b6";
+    const url = "https://api.openweathermap.org/data/2.5/forecast?q=";
+
+    function get_avg_forecast(data) {
+      var avg_data = {};
+      for (let i = 0; i < data.list.length; i++) {
+        let data_pt = data.list[i];
+        let data_date = data.list[i].dt_txt.split(" ")[0];
+
+        avg_data[data_date] = avg_data[data_date] || {};
+        avg_data[data_date]["temp"] = avg_data[data_date]["temp"] || [];
+        avg_data[data_date]["humidity"] = avg_data[data_date]["humidity"] || [];
+        avg_data[data_date]["wind"] = avg_data[data_date]["wind"] || [];
+        // avg_data[data_date]["uvindex"] = avg_data[data_date]["uvindex"] || [];
+
+        avg_data[data_date]["temp"].push(data_pt.main.temp);
+        avg_data[data_date]["humidity"].push(data_pt.main.humidity);
+        avg_data[data_date]["wind"].push(data_pt.wind.speed);
+        // avg_data[data_date]["uvindex"].push();
+      }
+      debugger;
+    }
+
+    $(document).ready(function() {
+      $("#search").click(function() {
+        const name = $("#name").val();
+        $.getJSON(url + name + ",us" + api_key, function(data) {
+          console.log(data);
+          get_avg_forecast(data);
+        });
+      });
+    });
+  </script>
+</html>
