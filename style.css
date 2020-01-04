@@ -6,4 +6,7 @@ header{
     font-size: 45px;
     font-weight: bold;
 }
-
+#currentWeather{
+    border: solid 2px lightgray;
+    
+}

@@ -19,29 +19,45 @@
     ></script>
   </head>
   <body>
-    <header>
-      Weather Dashboard
-    </header>
-    <h4>Search for a City:</h4>
-    <div class="Search">
-      <input
-        type="text"
-        id="name"
-        class="form-control"
-        aria-label="cities"
-        aria-describedby="basic-addon2"
-      />
-      <div class="input-group-append">
-        <button id="search" class="btn btn-outline-secondary" type="button">
-          Search
-        </button>
+    <div class="container">
+      <header>
+        Weather Dashboard
+      </header>
+      <div class="row">
+        <div class="col-sm-2">
+          <h4>Search for a City:</h4>
+          <div class="Search">
+            <input
+              type="text"
+              id="name"
+              class="form-control"
+              aria-label="cities"
+              aria-describedby="basic-addon2"
+            />
+            <div class="input-group-append">
+              <button
+                id="search"
+                class="btn btn-outline-secondary"
+                type="button"
+              >
+                Search
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-10">
+          <div id="currentWeather"></div>
+          <div id="forecastWeather"></div>
+        </div>
       </div>
     </div>
   </body>
   <!-- <script type="text/javascript" src="./script.js" /> -->
   <script>
-    const api_key = "&appid=10e84e4fb9948d4e60c90a2a674337b6";
-    const url = "https://api.openweathermap.org/data/2.5/forecast?q=";
+    var api_key = "&appid=10e84e4fb9948d4e60c90a2a674337b6";
+    var url = "https://api.openweathermap.org/data/2.5/forecast?q=";
+    var current_url = "https://api.openweathermap.org/data/2.5/weather?q=";
+    var uv_url = "https://api.openweathermap.org/data/2.5/uvi?";
 
     function get_avg_forecast(data) {
       var avg_data = {};
@@ -53,20 +69,109 @@
         avg_data[data_date]["temp"] = avg_data[data_date]["temp"] || [];
         avg_data[data_date]["humidity"] = avg_data[data_date]["humidity"] || [];
         avg_data[data_date]["wind"] = avg_data[data_date]["wind"] || [];
-        // avg_data[data_date]["uvindex"] = avg_data[data_date]["uvindex"] || [];
 
         avg_data[data_date]["temp"].push(data_pt.main.temp);
         avg_data[data_date]["humidity"].push(data_pt.main.humidity);
         avg_data[data_date]["wind"].push(data_pt.wind.speed);
-        // avg_data[data_date]["uvindex"].push();
       }
-      debugger;
+
+      display_forecast_weather(avg_data);
+    }
+
+    function display_forecast_weather(avg_data) {
+      var forecast_weather_html = "<h3>5 Day Forecast</h3>";
+      var keys = Object.keys(avg_data);
+      for (var i = 0; i < 5; i++) {
+        var day = avg_data[keys[i]];
+        var temp_array = day.temp;
+        var humidity_array = day.humidity;
+        var total_temp = 0;
+        var total_humidity = 0;
+
+        for (var t = 0; t < temp_array.length; t++) {
+          total_temp += temp_array[t];
+        }
+
+        for (var h = 0; h < humidity_array.length; h++) {
+          total_humidity += humidity_array[h];
+        }
+
+        var avg_temp = total_temp / temp_array.length;
+        var avg_humidity = total_humidity / humidity_array.length;
+        var date = new Date(keys[i]);
+
+        forecast_weather_html +=
+          "<div class='forecast'>" +
+          (date.getMonth() + 1) +
+          "/" +
+          date.getDate() +
+          "/" +
+          (date.getYear() + 1900) +
+          " <span>Temperature: " +
+          kelvintoFarenheit(avg_temp) +
+          "</span>  <span>Humidity: " +
+          Math.ceil(avg_humidity) +
+          "%" +
+          "</span> </div><br />";
+      }
+
+      $("#forecastWeather").html(forecast_weather_html);
+    }
+
+    function kelvintoFarenheit(k) {
+      return Math.ceil(((parseFloat(k) - 273.15) * 9) / 5 + 32);
+    }
+
+    function display_current_weather(data, uv_data) {
+      var current_weather_html =
+        "<h2>" +
+        data.name +
+        "</h2>" +
+        "<span>Temperature: </span>" +
+        kelvintoFarenheit(parseFloat(data.main.temp)) +
+        "<br/>" +
+        "<span>Humidity: </span>" +
+        Math.ceil(data.main.humidity) +
+        "%" +
+        "<br/>" +
+        "<span>Wind Speed: </span>" +
+        data.wind.speed +
+        "<br/>" +
+        "<span>UV Index: </span>" +
+        uv_data.value +
+        "<br/>";
+      $("#currentWeather").html(current_weather_html);
     }
 
     $(document).ready(function() {
       $("#search").click(function() {
-        const name = $("#name").val();
-        $.getJSON(url + name + ",us" + api_key, function(data) {
+        debugger;
+        var name = $("#name").val();
+        var current_weather_url = current_url + name + ",us" + api_key;
+        var forecast_weather_url = url + name + ",us" + api_key;
+        var uv_weather_url = uv_url + api_key;
+
+        //ajax for current weather
+        $.ajax({
+          url: current_weather_url,
+          method: "GET"
+        }).then(function(data) {
+          console.log(data);
+          var lat = data.coord.lat;
+          var lon = data.coord.lon;
+          $.ajax({
+            url: uv_weather_url + "&lat=" + lat + "&lon=" + lon,
+            method: "GET"
+          }).then(function(uv_data) {
+            display_current_weather(data, uv_data);
+          });
+        });
+
+        // ajax for next 5 days
+        $.ajax({
+          url: forecast_weather_url,
+          method: "GET"
+        }).then(function(data) {
           console.log(data);
           get_avg_forecast(data);
         });
