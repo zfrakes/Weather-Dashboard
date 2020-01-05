@@ -24,7 +24,7 @@
         Weather Dashboard
       </header>
       <div class="row">
-        <div class="col-sm-2">
+        <div class="col-sm-3">
           <h4>Search for a City:</h4>
           <div class="Search">
             <input
@@ -37,15 +37,20 @@
             <div class="input-group-append">
               <button
                 id="search"
-                class="btn btn-outline-secondary"
+                class="btn btn-primary"
                 type="button"
               >
                 Search
               </button>
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-10">
+            </div> <!-- .input-group-append -->
+          </div> <!-- .Search -->
+            <ul class="list-group" id="pastSearches">
+              <li class="list-group-item">Austin</li>
+              <li class="list-group-item">Los Angeles</li>
+              <li class="list-group-item">Miami</li>
+            </ul>
+        </div> <!-- .col-sm-3 -->
+        <div class="col-sm-9">
           <div id="currentWeather"></div>
           <div id="forecastWeather"></div>
         </div>
@@ -58,14 +63,36 @@
     var url = "https://api.openweathermap.org/data/2.5/forecast?q=";
     var current_url = "https://api.openweathermap.org/data/2.5/weather?q=";
     var uv_url = "https://api.openweathermap.org/data/2.5/uvi?";
+// Function for Past searched cities
+    function populatePastSearches() {
+      let pastSearches = document.getElementById('pastSearches');
+      pastSearches.innerHTML = '';
+      let pastCities = JSON.parse(localStorage.getItem('cityWeather'));
+      if (pastCities !== null) {
+        pastCities.forEach(function(city) {
+          let li = document.createElement('li');
+          li.classList.add('list-group-item');
+          li.textContent = city.city;
+          pastSearches.appendChild(li);
+        });
+      }
+    }
 
+    populatePastSearches();
+// Average of forecast
     function get_avg_forecast(data) {
       var avg_data = {};
       for (let i = 0; i < data.list.length; i++) {
+      
         let data_pt = data.list[i];
         let data_date = data.list[i].dt_txt.split(" ")[0];
-
         avg_data[data_date] = avg_data[data_date] || {};
+        if (i % 8 === 0) {
+          if (i+4 < data.list.length) {
+            //console.log(data.list[i+4]);
+            avg_data[data_date]['weatherIcon'] = data.list[i].weather[0].icon;
+          }
+        }
         avg_data[data_date]["temp"] = avg_data[data_date]["temp"] || [];
         avg_data[data_date]["humidity"] = avg_data[data_date]["humidity"] || [];
         avg_data[data_date]["wind"] = avg_data[data_date]["wind"] || [];
@@ -74,10 +101,10 @@
         avg_data[data_date]["humidity"].push(data_pt.main.humidity);
         avg_data[data_date]["wind"].push(data_pt.wind.speed);
       }
-
+      console.log(avg_data);
       display_forecast_weather(avg_data);
     }
-
+// fuction for 5 day forecast
     function display_forecast_weather(avg_data) {
       var forecast_weather_html = "<h3>5 Day Forecast</h3>";
       var keys = Object.keys(avg_data);
@@ -87,7 +114,8 @@
         var humidity_array = day.humidity;
         var total_temp = 0;
         var total_humidity = 0;
-
+        console.log(avg_data[keys[i]].weatherIcon);
+        var weatherIcon = avg_data[keys[i]].weatherIcon;
         for (var t = 0; t < temp_array.length; t++) {
           total_temp += temp_array[t];
         }
@@ -95,13 +123,13 @@
         for (var h = 0; h < humidity_array.length; h++) {
           total_humidity += humidity_array[h];
         }
-
+    // Icons and current date for 5 day forcast
         var avg_temp = total_temp / temp_array.length;
         var avg_humidity = total_humidity / humidity_array.length;
         var date = new Date(keys[i]);
-
         forecast_weather_html +=
           "<div class='forecast'>" +
+          ` <img src='http://openweathermap.org/img/wn/${weatherIcon}@2x.png' /><br/>`+
           (date.getMonth() + 1) +
           "/" +
           date.getDate() +
@@ -123,10 +151,23 @@
     }
 
     function display_current_weather(data, uv_data) {
+      let pastCities = JSON.parse(localStorage.getItem('cityWeather'));
+      if (pastCities == null) {
+        pastCities = [];
+      }
+
+      var today = new Date();
+      var dd = String(today.getDate()).padStart(2, '0');
+      var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+      var yyyy = today.getFullYear();
+// icons for current day
+      today = mm + '/' + dd + '/' + yyyy;
       var current_weather_html =
         "<h2>" +
         data.name +
         "</h2>" +
+        ` <img src='http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png' />` +
+        `<span>Current Date: ${today}</span><br/>` +
         "<span>Temperature: </span>" +
         kelvintoFarenheit(parseFloat(data.main.temp)) +
         "<br/>" +
@@ -140,12 +181,19 @@
         "<span>UV Index: </span>" +
         uv_data.value +
         "<br/>";
+        // pasted search history from local storage
       $("#currentWeather").html(current_weather_html);
+      pastCities.push({
+        city: data.name,
+        data
+        });
+      localStorage.setItem('cityWeather', JSON.stringify(pastCities));
+      populatePastSearches();
     }
 
     $(document).ready(function() {
       $("#search").click(function() {
-        debugger;
+    
         var name = $("#name").val();
         var current_weather_url = current_url + name + ",us" + api_key;
         var forecast_weather_url = url + name + ",us" + api_key;

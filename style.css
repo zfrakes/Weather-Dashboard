@@ -10,3 +10,20 @@ header{
     border: solid 2px lightgray;
     
 }
+
+#forecastWeather {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#forecastWeather h3 {
+    width: 100%;
+}
+
+.forecast {
+    box-sizing: border-box;
+    width: 20%;
+    padding: 5px;
+    color: white;
+    background-color: dodgerblue;
+}
