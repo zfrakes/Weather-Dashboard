@@ -13,6 +13,8 @@ A Weather Dashboard is an application that shows a weather forecast for a specif
 ## Launch
 To launch this application click or copy and paste the following link in your browser.
 
+file:///Users/Zoey/code/Weather-Dashboard/index.html
+
 ## Author
 
 This application was created by Zoey Frakes. To contact please email at zfrakes811@gmail.com
