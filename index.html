@@ -45,9 +45,6 @@
             </div> <!-- .input-group-append -->
           </div> <!-- .Search -->
             <ul class="list-group" id="pastSearches">
-              <li class="list-group-item">Austin</li>
-              <li class="list-group-item">Los Angeles</li>
-              <li class="list-group-item">Miami</li>
             </ul>
         </div> <!-- .col-sm-3 -->
         <div class="col-sm-9">
@@ -190,6 +187,36 @@
       localStorage.setItem('cityWeather', JSON.stringify(pastCities));
       populatePastSearches();
     }
+    // create an jquery selector with onclick
+    $(document).on( "click",".list-group-item",function() {
+  console.log( $( this ).text() );
+  var name = $( this ).text()
+        var current_weather_url = current_url + name + ",us" + api_key;
+        var forecast_weather_url = url + name + ",us" + api_key;
+        var uv_weather_url = uv_url + api_key;
+  $.ajax({
+          url: current_weather_url,
+          method: "GET"
+        }).then(function(data) {
+          console.log(data);
+          var lat = data.coord.lat;
+          var lon = data.coord.lon;
+          $.ajax({
+            url: uv_weather_url + "&lat=" + lat + "&lon=" + lon,
+            method: "GET"
+          }).then(function(uv_data) {
+            display_current_weather(data, uv_data);
+          });
+        });
+        $.ajax({
+          url: forecast_weather_url,
+          method: "GET"
+        }).then(function(data) {
+          console.log(data);
+          get_avg_forecast(data);
+        });
+});
+
 
     $(document).ready(function() {
       $("#search").click(function() {
